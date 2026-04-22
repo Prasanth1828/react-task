@@ -1,7 +1,5 @@
-// Filter Bar Component
-// TODO: Implement advanced filtering controls
-
-import React from 'react';
+// Filter Bar Component with debounced search
+import React, { useEffect, useMemo } from 'react';
 import { TASK_TYPES, PRIORITIES, STATUSES } from '../api/mockApi';
 
 const FilterBar = ({ 
@@ -11,24 +9,25 @@ const FilterBar = ({
   onFiltersChange 
 }) => {
 
-  // TODO: Implement filter functionality
-  // Requirements:
-  // 1. Project filter dropdown
-  // 2. Assignee filter dropdown  
-  // 3. Status filter dropdown
-  // 4. Task type filter dropdown
-  // 5. Search input with debouncing
-  // 6. Clear all filters button
-  // 7. Show active filter count
-
   const [searchInput, setSearchInput] = React.useState(filters.search || '');
 
-  // TODO: Implement debounced search with useEffect and setTimeout
+  // Debounced search - waits 400ms after typing stops
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== (filters.search || '')) {
+        onFiltersChange({
+          ...filters,
+          search: searchInput,
+        });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const handleFilterChange = (filterKey, value) => {
     onFiltersChange({
       ...filters,
-      [filterKey]: value
+      [filterKey]: value,
     });
   };
 
@@ -39,11 +38,20 @@ const FilterBar = ({
       assigneeId: null,
       status: 'all',
       taskType: 'all',
-      search: ''
+      search: '',
     });
   };
 
-  // TODO: Count active filters for display
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.projectId) count++;
+    if (filters.assigneeId) count++;
+    if (filters.status && filters.status !== 'all') count++;
+    if (filters.taskType && filters.taskType !== 'all') count++;
+    if (filters.search) count++;
+    return count;
+  }, [filters]);
 
   return (
     <div className="filter-bar">
@@ -128,10 +136,9 @@ const FilterBar = ({
           <button 
             onClick={clearAllFilters}
             className="clear-filters-btn"
-            // TODO: Disable when no active filters
+            disabled={activeFilterCount === 0}
           >
-            Clear Filters
-            {/* TODO: Show count of active filters */}
+            Clear Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </button>
         </div>
       </div>
