@@ -1,5 +1,4 @@
 // UI action creators
-// TODO: Implement UI state management actions
 
 // Action Types
 export const OPEN_TASK_FORM = 'OPEN_TASK_FORM';
@@ -14,11 +13,49 @@ export const SET_LOADING = 'SET_LOADING';
 export const SET_ERROR = 'SET_ERROR';
 export const CLEAR_ERROR = 'CLEAR_ERROR';
 
-// TODO: Implement action creators for UI state
-// Requirements:
-// 1. Task form management (open/close, mode)
-// 2. Filter management
-// 3. Loading states
-// 4. Error handling
+// --- Task Form Actions ---
+export const openTaskForm = (mode = 'create', taskId = null) => ({
+  type: OPEN_TASK_FORM,
+  payload: { mode, taskId },
+});
 
-// TODO: Create action creators for form state, filters, loading, errors
+export const closeTaskForm = () => ({
+  type: CLOSE_TASK_FORM,
+});
+
+export const setFormMode = (mode, taskId = null) => ({
+  type: SET_FORM_MODE,
+  payload: { mode, taskId },
+});
+
+// --- Filter Actions ---
+export const setFilters = (filters) => ({
+  type: SET_FILTERS,
+  payload: filters,
+});
+
+export const clearFilters = () => ({
+  type: CLEAR_FILTERS,
+});
+
+export const setSearch = (search) => ({
+  type: SET_SEARCH,
+  payload: search,
+});
+
+// --- Loading Actions ---
+export const setLoading = (key, isLoading) => ({
+  type: SET_LOADING,
+  payload: { key, isLoading },
+});
+
+// --- Error Actions ---
+export const setError = (key, error) => ({
+  type: SET_ERROR,
+  payload: { key, error },
+});
+
+export const clearError = (key) => ({
+  type: CLEAR_ERROR,
+  payload: key,
+});
