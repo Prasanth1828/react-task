@@ -181,10 +181,6 @@ export const mockApi = {
   // Fetch all users
   async fetchUsers() {
     await delay(300 + Math.random() * 200); // 300-500ms delay
-    
-    if (shouldFail()) {
-      throw new Error('Failed to fetch users. Please try again.');
-    }
 
     return {
       success: true,
@@ -195,10 +191,6 @@ export const mockApi = {
   // Fetch all projects
   async fetchProjects() {
     await delay(200 + Math.random() * 300); // 200-500ms delay
-    
-    if (shouldFail()) {
-      throw new Error('Failed to fetch projects. Please try again.');
-    }
 
     return {
       success: true,

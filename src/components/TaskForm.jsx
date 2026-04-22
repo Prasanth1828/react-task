@@ -5,15 +5,15 @@ import { TASK_TYPES, PRIORITIES, BUG_SEVERITIES } from '../api/mockApi';
 
 const AUTO_SAVE_KEY = 'taskFormAutoSave';
 
-const TaskForm = ({ 
-  isOpen, 
+const TaskForm = ({
+  isOpen,
   mode,
   initialData = null,
   onSubmit,
   onClose,
   users = [],
   projects = [],
-  loading = false 
+  loading = false
 }) => {
 
   // Default form values
@@ -55,17 +55,17 @@ const TaskForm = ({
   });
 
   // Field arrays for dynamic lists
-  const { fields: subtaskFields, append: addSubtask, remove: removeSubtask } = useFieldArray({
+  const { fields: subtaskFields, append: addSubtask, remove: removeSubtask, replace: replaceSubtasks } = useFieldArray({
     control,
     name: 'subtasks',
   });
 
-  const { fields: criteriaFields, append: addCriteria, remove: removeCriteria } = useFieldArray({
+  const { fields: criteriaFields, append: addCriteria, remove: removeCriteria, replace: replaceCriteria } = useFieldArray({
     control,
     name: 'acceptanceCriteria',
   });
 
-  const { fields: questionFields, append: addQuestion, remove: removeQuestion } = useFieldArray({
+  const { fields: questionFields, append: addQuestion, remove: removeQuestion, replace: replaceQuestions } = useFieldArray({
     control,
     name: 'researchQuestions',
   });
@@ -85,46 +85,35 @@ const TaskForm = ({
   // Reset form when initialData changes (edit mode)
   useEffect(() => {
     if (isOpen && initialData) {
+      // Edit mode: populate with existing task data
       reset({
         ...defaultValues,
         ...initialData,
         subtasks: initialData.subtasks || [],
-        acceptanceCriteria: initialData.acceptanceCriteria 
+        acceptanceCriteria: initialData.acceptanceCriteria
           ? initialData.acceptanceCriteria.map(c => typeof c === 'string' ? { value: c } : c)
           : [],
       });
     } else if (isOpen && !initialData) {
-      // Try to restore from localStorage for create mode
-      const saved = localStorage.getItem(AUTO_SAVE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          reset(parsed);
-        } catch {
-          reset(defaultValues);
-        }
-      } else {
-        reset(defaultValues);
-      }
+      // Create mode: always start fresh
+      localStorage.removeItem(AUTO_SAVE_KEY);
+      reset(defaultValues);
+      replaceSubtasks([]);
+      replaceCriteria([]);
+      replaceQuestions([]);
+    } else if (!isOpen) {
+      reset(defaultValues);
+      replaceSubtasks([]);
+      replaceCriteria([]);
+      replaceQuestions([]);
     }
-  }, [isOpen, initialData, reset, defaultValues]);
-
-  // Auto-save to localStorage
-  const watchedFields = watch();
-  useEffect(() => {
-    if (isOpen && mode === 'create') {
-      const timer = setTimeout(() => {
-        localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(watchedFields));
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [watchedFields, isOpen, mode]);
+  }, [isOpen, initialData, reset, defaultValues, replaceSubtasks, replaceCriteria, replaceQuestions]);
 
   // Handle form submission
   const onFormSubmit = (data) => {
     // Clean up data based on task type
     const cleanedData = { ...data };
-    
+
     if (data.taskType !== 'Bug') {
       delete cleanedData.severity;
       delete cleanedData.stepsToReproduce;
@@ -147,6 +136,10 @@ const TaskForm = ({
     }
 
     localStorage.removeItem(AUTO_SAVE_KEY);
+    reset(defaultValues);
+    replaceSubtasks([]);
+    replaceCriteria([]);
+    replaceQuestions([]);
     onSubmit(cleanedData);
   };
 
@@ -292,9 +285,10 @@ const TaskForm = ({
           <div className="form-group">
             <label>Title *</label>
             <input
-              {...register('title', { 
+              {...register('title', {
                 required: 'Title is required',
-                minLength: { value: 3, message: 'Title must be at least 3 characters' }
+                minLength: { value: 3, message: 'Title must be at least 3 characters' },
+                maxLength: { value: 50, message: 'Title must not exceed 50 characters' }
               })}
               placeholder="Enter task title..."
             />
@@ -358,7 +352,11 @@ const TaskForm = ({
           {/* Due Date */}
           <div className="form-group">
             <label>Due Date</label>
-            <input type="date" {...register('dueDate')} />
+            <input
+              type="date"
+              min={new Date().toISOString().split('T')[0]}
+              {...register('dueDate')}
+            />
           </div>
 
           {/* Dynamic Fields based on Task Type */}

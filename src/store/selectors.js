@@ -59,6 +59,9 @@ export const selectFilteredTasks = createSelector(
       );
     }
 
+    // Sort by newest first
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
     return filtered;
   }
 );
